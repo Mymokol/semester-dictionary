@@ -12,6 +12,7 @@ namespace semester_dictionary_main
 
         public Word(string form, string rhyme, PoS partOfSpeech, WordClass wClass)
         {
+            // ADD PRONUNCIATION!
             baseForm = form;
             baseRhyme = rhyme;
             this.partOfSpeech = partOfSpeech;
@@ -89,6 +90,14 @@ namespace semester_dictionary_main
         {
             this.id = id;
         }
+    }
+
+
+    public class CentralStorage
+    {
+        private List<Word> wordList = new List<Word>();
+        private List<PoS> PoSList = new List<PoS>();
+        private List<RhymeGroup> RhymeGroupList = new List<RhymeGroup>();
     }
 
     internal static class Program
