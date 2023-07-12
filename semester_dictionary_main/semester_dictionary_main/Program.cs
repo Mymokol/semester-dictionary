@@ -6,18 +6,21 @@ namespace semester_dictionary_main
         private string baseForm = "";
         private string basePron = "";
         private string baseRhyme = "";
-        private Word? counterpart;
+        private string translation = "";
+        private string definition = "";
         private PoS partOfSpeech;
         private WordClass wClass;
 
 
-        public Word(string form, string pronunciation, string rhyme, PoS partOfSpeech, WordClass wClass)
+        public Word(string form, string pronunciation, string rhyme, string translation, string definition, PoS partOfSpeech, WordClass wClass)
         {
             baseForm = form;
             basePron = pronunciation;
             baseRhyme = rhyme;
             this.partOfSpeech = partOfSpeech;
             this.wClass = wClass;
+            this.translation = translation;
+            this.definition = definition;
         }
 
         public void setCounterpart(Word other)
