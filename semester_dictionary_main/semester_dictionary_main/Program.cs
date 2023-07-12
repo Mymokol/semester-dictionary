@@ -4,16 +4,17 @@ namespace semester_dictionary_main
     public class Word
     {
         private string baseForm = "";
+        private string basePron = "";
         private string baseRhyme = "";
         private Word? counterpart;
         private PoS partOfSpeech;
         private WordClass wClass;
 
 
-        public Word(string form, string rhyme, PoS partOfSpeech, WordClass wClass)
+        public Word(string form, string pronunciation, string rhyme, PoS partOfSpeech, WordClass wClass)
         {
-            // ADD PRONUNCIATION!
             baseForm = form;
+            basePron = pronunciation;
             baseRhyme = rhyme;
             this.partOfSpeech = partOfSpeech;
             this.wClass = wClass;
@@ -29,6 +30,7 @@ namespace semester_dictionary_main
     {
         private Word parent;
         private string form;
+        private string pronunciation;
         private RhymeGroup rhyme;
         private Declension declension;
 
@@ -37,6 +39,7 @@ namespace semester_dictionary_main
             parent = baseWord;
             declension = rule;
             form = ""; // create form by transforming base form with rule's regex
+            pronunciation = ""; // create in a similar fashion
             // determine rhyme group form, then search all rhyme groups, if not found, create new.
         }
     }
@@ -45,6 +48,7 @@ namespace semester_dictionary_main
     {
         private string name;
         private string formRegex = "";
+        private string pronRegex = "";
         private string rhymeRegex = "";
         private WordClass parent;
 
