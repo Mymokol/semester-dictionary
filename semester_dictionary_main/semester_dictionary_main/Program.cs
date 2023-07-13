@@ -1,3 +1,5 @@
+
+
 namespace semester_dictionary_main
 {
 
@@ -21,11 +23,6 @@ namespace semester_dictionary_main
             this.wClass = wClass;
             this.translation = translation;
             this.definition = definition;
-        }
-
-        public void setCounterpart(Word other)
-        {
-            counterpart = other;
         }
     }
 
