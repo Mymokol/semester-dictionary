@@ -4,6 +4,17 @@ using System.Text.RegularExpressions;
 namespace semester_dictionary_main
 {
 
+
+    #region EXCEPTIONS
+    public class ListNotEmptyException : Exception
+    {
+        public ListNotEmptyException() : base() { }
+        public ListNotEmptyException(string message) : base(message) { }
+        public ListNotEmptyException(string message, Exception inner) : base(message, inner) { }
+    }
+    #endregion
+
+
     #region STRUCTURES
     public struct TransformUnit
     {
@@ -31,6 +42,7 @@ namespace semester_dictionary_main
         private string definition = "";
         private PoS partOfSpeech;
         private WordClass wClass;
+        private List<WordForm> forms = new List<WordForm>();
 
 
         public Word(string form, string pronunciation, string rhyme, string translation, 
@@ -44,6 +56,8 @@ namespace semester_dictionary_main
             this.translation = translation;
             this.definition = definition;
             this.central = central;
+
+            CreateWordForms();
         }
         #endregion
 
@@ -83,6 +97,36 @@ namespace semester_dictionary_main
             return wClass;
         }
         #endregion
+
+        #region PRIVATE METHODS
+        private void CreateWordForms()
+        {
+            /*
+             * Creates WordForms and stores them in its 'forms' list.
+             * The list must be empty before new wordforms are created, 
+             * otherwise throws a ListNotEmptyException.
+             */
+
+            if (forms.Count != 0)
+            {
+                throw new ListNotEmptyException("Tried to create WordForms while some WordForms already existed");
+            }
+
+            foreach (Declension declension in wClass.getDeclensions())
+            {
+                forms.Add(new WordForm(this, declension, central));
+            }
+        }
+
+        private void DeleteWordForms()
+        {
+            foreach (WordForm form in forms)
+            {
+                form.Remove();
+                forms.Remove(form);
+            }
+        }
+        #endregion
     }
 
     public class WordForm
@@ -104,13 +148,23 @@ namespace semester_dictionary_main
             pronunciation = deriveForm(parent.getPronunciation(), declension.getPronTransform());
             this.rhyme = evaluateRhyme(deriveForm(parent.getRhyme(), declension.getRhymeTransform()));
             // assigns the wordform a rhyme group based on the transformed rhyme pattern of the parent
+
+            central.addWordForm(this);
+        }
+        #endregion
+
+        #region PUBLIC METHODS
+        public void Remove()
+        {
+            central.removeWordForm(this);
+            rhyme.RemoveForm(this);
         }
         #endregion
 
         #region PRIVATE METHODS
         private RhymeGroup evaluateRhyme(string rhymeLiteral)
         {
-            return central.assignRhymeGroup(rhymeLiteral, this);
+            return central.AssignRhymeGroup(rhymeLiteral, this);
         }
 
         private string deriveForm(string baseForm, List<TransformUnit> rules)
@@ -183,6 +237,13 @@ namespace semester_dictionary_main
             this.central = central;
         }
         #endregion
+
+        #region GETTERS
+        public List<Declension> getDeclensions()
+        {
+            return declensions;
+        }
+        #endregion
     }
 
     public class PoS
@@ -219,16 +280,21 @@ namespace semester_dictionary_main
         #endregion
 
         #region GETTERS
-        public string getID()
+        public string GetID()
         {
             return this.id;
         }
         #endregion
 
         #region PUBLIC METHODS
-        public void insert(WordForm wordForm)
+        public void Insert(WordForm form)
         {
-            rhymes.Add(wordForm);
+            rhymes.Add(form);
+        }
+
+        public void RemoveForm(WordForm form)
+        {
+            rhymes.Remove(form);
         }
     }
 
@@ -237,18 +303,20 @@ namespace semester_dictionary_main
     {
         #region ATTRIBUTES AND CONSTRUCTOR
         private List<Word> wordList = new List<Word>();
+        private List<Word> transList = new List<Word>();
+        private List<WordForm> formList = new List<WordForm>();
         private List<PoS> PoSList = new List<PoS>();
         private List<RhymeGroup> RhymeGroupList = new List<RhymeGroup>();
         #endregion
 
         #region PUBLIC METHODS
-        public RhymeGroup assignRhymeGroup(string rhymeLiteral, WordForm from)
+        public RhymeGroup AssignRhymeGroup(string rhymeLiteral, WordForm from)
         {
             RhymeGroup? found = null;
 
             foreach (RhymeGroup group in RhymeGroupList)
             {
-                if (group.getID() == rhymeLiteral)
+                if (group.GetID() == rhymeLiteral)
                 {
                     found = group;
                     break;
@@ -262,15 +330,42 @@ namespace semester_dictionary_main
 
             return found;
         }
+
+        public void addWordForm(WordForm form)
+        {
+            formList.Add(form);
+        }
+
+        public void removeWordForm(WordForm form)
+        {
+            formList.Remove(form);
+        }
+
+        public void addWord(Word word)
+        {
+            wordList.Add(word);
+            transList.Add(word);
+        }
+
+        public void removeWord(Word word)
+        {
+            wordList.Remove(word);
+            transList.Remove(word);
+        }
         #endregion
 
         #region PRIVATE METHODS
         private RhymeGroup createRhymeGroup(string id, WordForm firstWord)
         {
             RhymeGroup newGroup = new RhymeGroup(id, this);
-            newGroup.insert(firstWord);
+            newGroup.Insert(firstWord);
             RhymeGroupList.Add(newGroup);
             return newGroup;
+        }
+
+        private void removeRhymeGroup(RhymeGroup group)
+        {
+            RhymeGroupList.Remove(group);
         }
     }
 
