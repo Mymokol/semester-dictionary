@@ -1,4 +1,5 @@
 using System;
+using System.DirectoryServices;
 using System.Text.RegularExpressions;
 
 namespace semester_dictionary_main
@@ -98,6 +99,60 @@ namespace semester_dictionary_main
         }
         #endregion
 
+        #region PUBLIC METHODS
+        public void Remove()
+        {
+            DeleteWordForms();
+
+            central.RemoveWord(this);
+        }
+
+        public void ChangeForm(string newBase)
+        {
+            baseForm = newBase;
+            foreach(WordForm form in forms)
+            {
+                form.ChangeForm(newBase);
+            }
+        }
+
+        public void ChangePronunciation(string newBase)
+        {
+            basePron = newBase;
+            foreach (WordForm form in forms)
+            {
+                form.ChangePronunciation(newBase);
+            }
+        }
+
+        public void ChangeRhyme(string newBase)
+        {
+            baseRhyme = newBase;
+            foreach (WordForm form in forms)
+            {
+                form.ChangeRhyme(newBase);
+            }
+        }
+
+        public void changeTranslation(string newTrans)
+        {
+            translation = newTrans;
+        }
+
+        public void changeDefinition(string newDef)
+        {
+            definition = newDef;
+        }
+
+        public void changeClass(WordClass newClass)
+        {
+            partOfSpeech = newClass.GetPoS();
+            wClass = newClass;
+            DeleteWordForms();
+            CreateWordForms();
+        }
+        #endregion
+
         #region PRIVATE METHODS
         private void CreateWordForms()
         {
@@ -112,7 +167,7 @@ namespace semester_dictionary_main
                 throw new ListNotEmptyException("Tried to create WordForms while some WordForms already existed");
             }
 
-            foreach (Declension declension in wClass.getDeclensions())
+            foreach (Declension declension in wClass.GetDeclensions())
             {
                 forms.Add(new WordForm(this, declension, central));
             }
@@ -144,30 +199,52 @@ namespace semester_dictionary_main
             this.central = central;
             parent = baseWord;
             declension = rule;
-            form = deriveForm(parent.getForm(), declension.getFormTransform());
-            pronunciation = deriveForm(parent.getPronunciation(), declension.getPronTransform());
-            this.rhyme = evaluateRhyme(deriveForm(parent.getRhyme(), declension.getRhymeTransform()));
+            form = DeriveForm(parent.getForm(), declension.getFormTransform());
+            pronunciation = DeriveForm(parent.getPronunciation(), declension.getPronTransform());
+            this.rhyme = EvaluateRhyme(DeriveForm(parent.getRhyme(), declension.getRhymeTransform()));
             // assigns the wordform a rhyme group based on the transformed rhyme pattern of the parent
 
-            central.addWordForm(this);
+            central.AddWordForm(this);
         }
         #endregion
 
         #region PUBLIC METHODS
         public void Remove()
         {
-            central.removeWordForm(this);
+            central.RemoveWordForm(this);
             rhyme.RemoveForm(this);
+        }
+
+        public void ChangeForm(string newBase)
+        {
+            form = DeriveForm(newBase, declension.getFormTransform());
+        }
+
+        public void ChangePronunciation(string newBase)
+        {
+            pronunciation = DeriveForm(newBase, declension.getPronTransform());
+        }
+
+        public void ChangeRhyme(string newBase)
+        {
+            RemoveSelfFromRhymeGroup();
+            rhyme = EvaluateRhyme(newBase);
         }
         #endregion
 
         #region PRIVATE METHODS
-        private RhymeGroup evaluateRhyme(string rhymeLiteral)
+        private RhymeGroup EvaluateRhyme(string rhymeLiteral)
         {
             return central.AssignRhymeGroup(rhymeLiteral, this);
         }
 
-        private string deriveForm(string baseForm, List<TransformUnit> rules)
+        private void RemoveSelfFromRhymeGroup()
+        {
+            rhyme.RemoveForm(this);
+            rhyme = null;
+        }
+
+        private string DeriveForm(string baseForm, List<TransformUnit> rules)
         {
             // returns the base form altered by all the transform pairs in the declension.
 
@@ -239,9 +316,14 @@ namespace semester_dictionary_main
         #endregion
 
         #region GETTERS
-        public List<Declension> getDeclensions()
+        public List<Declension> GetDeclensions()
         {
             return declensions;
+        }
+
+        public PoS GetPoS()
+        {
+            return parent;
         }
         #endregion
     }
@@ -295,7 +377,13 @@ namespace semester_dictionary_main
         public void RemoveForm(WordForm form)
         {
             rhymes.Remove(form);
+            if (rhymes.Count == 0) central.RemoveRhymeGroup(this);
         }
+        #endregion
+
+        #region PRIVATE METHODS
+
+        #endregion
     }
 
 
@@ -325,29 +413,33 @@ namespace semester_dictionary_main
 
             if (found == null)
             {
-                found = createRhymeGroup(rhymeLiteral, from);
+                found = CreateRhymeGroup(rhymeLiteral, from);
             }
 
             return found;
         }
+        public void RemoveRhymeGroup(RhymeGroup group)
+        {
+            RhymeGroupList.Remove(group);
+        }
 
-        public void addWordForm(WordForm form)
+        public void AddWordForm(WordForm form)
         {
             formList.Add(form);
         }
 
-        public void removeWordForm(WordForm form)
+        public void RemoveWordForm(WordForm form)
         {
             formList.Remove(form);
         }
 
-        public void addWord(Word word)
+        public void AddWord(Word word)
         {
             wordList.Add(word);
             transList.Add(word);
         }
 
-        public void removeWord(Word word)
+        public void RemoveWord(Word word)
         {
             wordList.Remove(word);
             transList.Remove(word);
@@ -355,18 +447,14 @@ namespace semester_dictionary_main
         #endregion
 
         #region PRIVATE METHODS
-        private RhymeGroup createRhymeGroup(string id, WordForm firstWord)
+        private RhymeGroup CreateRhymeGroup(string id, WordForm firstWord)
         {
             RhymeGroup newGroup = new RhymeGroup(id, this);
             newGroup.Insert(firstWord);
             RhymeGroupList.Add(newGroup);
             return newGroup;
         }
-
-        private void removeRhymeGroup(RhymeGroup group)
-        {
-            RhymeGroupList.Remove(group);
-        }
+        #endregion
     }
 
     internal static class Program
