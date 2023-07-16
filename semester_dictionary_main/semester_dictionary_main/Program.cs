@@ -13,11 +13,25 @@ namespace semester_dictionary_main
         public ListNotEmptyException(string message) : base(message) { }
         public ListNotEmptyException(string message, Exception inner) : base(message, inner) { }
     }
-    #endregion
+
+    public class ItemAlreadyExistsException : InvalidOperationException
+    {
+        public ItemAlreadyExistsException() : base() { }
+        public ItemAlreadyExistsException(string message) : base(message) { }
+        public ItemAlreadyExistsException(string message, Exception inner) : base(message, inner) { }
+    }
+
+    public class ItemNotFoundException : InvalidOperationException
+    {
+        public ItemNotFoundException() : base() { }
+        public ItemNotFoundException(string message) : base(message) { }
+        public ItemNotFoundException(string message, Exception inner) : base(message, inner) { }
+    }
+        #endregion
 
 
-    #region STRUCTURES
-    public struct TransformUnit
+        #region STRUCTURES
+        public struct TransformUnit
     {
         public string identifier = "";
         public string regex = "";
@@ -282,6 +296,11 @@ namespace semester_dictionary_main
         #endregion
 
         #region GETTERS
+        public string getName()
+        {
+            return name;
+        }
+
         public List<TransformUnit> getFormTransform()
         {
             return formTransform;
@@ -295,6 +314,13 @@ namespace semester_dictionary_main
         public List<TransformUnit> getRhymeTransform()
         {
             return rhymeTransform;
+        }
+        #endregion
+
+        #region PUBLIC METHODS
+        public void Rename(string newName)
+        {
+            name = newName;
         }
         #endregion
     }
@@ -326,10 +352,64 @@ namespace semester_dictionary_main
             return parent;
         }
         #endregion
+
+        #region PUBLIC METHODS
+        public void AddDeclension(string dName)
+        {
+            /* 
+             * may only be called by the parent PoS.
+             */
+            declensions.Add(new Declension(dName, this, central));
+        }
+
+        public void RemoveDeclension(string dName)
+        {
+            /*
+             * may only be called by the parent PoS.
+             */
+            foreach(Declension dec in declensions)
+            {
+                if (dec.getName() == dName)
+                {
+                    declensions.Remove(dec);
+                    break;
+                }
+            }
+        }
+
+        public void RenameDeclension(string oldName, string newName)
+        {
+            /*
+             * May only be called by the parent PoS
+             */
+            foreach (Declension dec in declensions)
+            {
+                if (dec.getName() == oldName)
+                {
+                    dec.Rename(newName);
+                    break;
+                }
+            }
+        }
+
+        public void Rename(string newName)
+        {
+            this.name = newName;
+        }
+        #endregion
     }
 
     public class PoS
     {
+        /*
+         * Part of speech, such as a noun or a verb.
+         * Manages its word classes, and its declensions.
+         * Declensions are handled by each word class separately,
+         * but they may only be added, removed, or renamed in all 
+         * word classes at the same time, through the parent PoS.
+         * Declension effects are then handled individually for each
+         * declension object.
+         */
         #region ATTRIBUTES AND CONSTRUCTOR
         private CentralStorage central;
         private string name;
@@ -341,6 +421,78 @@ namespace semester_dictionary_main
         {
             this.name = name;
             this.central = central;
+            AddWordClass(name); // each PoS needs at least one WordClass to operate.
+        }
+        #endregion
+
+        #region PUBLIC METHODS
+        public void AddWordToSelf(Word word)
+        {
+            this.words.Add(word);
+        }
+
+        public void AddWordClass(string name)
+        {
+            WordClass wClass = new WordClass(name, this, central);
+            foreach (string declension in declensions)
+            {
+                wClass.AddDeclension(declension);
+            }
+        }
+
+        public void RemoveWordClass(WordClass wClass)
+        {
+            if (wordClasses.Count == 1)
+            {
+                throw new InvalidOperationException("Trying to remove the only wordClass of a PoS. A PoS needs at least one word class to operate.")
+            }
+            wordClasses.Remove(wClass);
+        }
+
+        public void AddDeclension(string name)
+        {
+            if (declensions.Contains(name))
+            {
+                throw new ItemAlreadyExistsException(string.Format("Tried to create a declension with the name {0}, but it already exists.", name));
+            }
+            declensions.Add(name);
+            foreach (WordClass wClass in wordClasses)
+            {
+                wClass.AddDeclension(name);
+            }
+        }
+
+        public void RemoveDeclension(string name)
+        {
+            if (!declensions.Contains(name))
+            {
+                throw new ItemNotFoundException(string.Format("Declension {0} was not found in this PoS.", name));
+            }
+            declensions.Remove(name);
+            foreach(WordClass wClass in wordClasses)
+            {
+                wClass.RemoveDeclension(name);
+            }
+        }
+
+        public void RenameDeclension(string oldName, string newName)
+        {
+            if (!declensions.Contains(oldName))
+            {
+                throw new ItemNotFoundException(string.Format("Declension {0} was not found in this PoS.", oldName));
+            }
+            if (declensions.Contains(newName))
+            {
+                throw new ItemAlreadyExistsException(string.Format("Tried to rename a declension to {0}, but one with that name already exists.", newName));
+            }
+
+            declensions.Remove(oldName);
+            declensions.Add(newName);
+
+            foreach (WordClass wClass in wordClasses)
+            {
+                wClass.RenameDeclension(oldName, newName);
+            }
         }
         #endregion
     }
@@ -456,6 +608,7 @@ namespace semester_dictionary_main
         }
         #endregion
     }
+
 
     internal static class Program
     {

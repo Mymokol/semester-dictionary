@@ -1,0 +1,17 @@
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\bin\Debug\net6.0-windows\semester_dictionary_main.exe
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\bin\Debug\net6.0-windows\semester_dictionary_main.deps.json
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\bin\Debug\net6.0-windows\semester_dictionary_main.runtimeconfig.json
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\bin\Debug\net6.0-windows\semester_dictionary_main.dll
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\bin\Debug\net6.0-windows\semester_dictionary_main.pdb
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\semester_dictionary_main.csproj.AssemblyReference.cache
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\semester_dictionary_main.Form1.resources
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\semester_dictionary_main.csproj.GenerateResource.cache
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\semester_dictionary_main.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\semester_dictionary_main.AssemblyInfoInputs.cache
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\semester_dictionary_main.AssemblyInfo.cs
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\semester_dictionary_main.csproj.CoreCompileInputs.cache
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\semester_dictionary_main.dll
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\refint\semester_dictionary_main.dll
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\semester_dictionary_main.pdb
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\semester_dictionary_main.genruntimeconfig.cache
+C:\Users\capta\OneDrive\Documents\semester-dictionary\semester_dictionary_main\semester_dictionary_main\obj\Debug\net6.0-windows\ref\semester_dictionary_main.dll
