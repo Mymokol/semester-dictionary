@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.DirectoryServices;
 using System.Text.RegularExpressions;
 
@@ -59,14 +59,13 @@ namespace semester_dictionary_main
         private WordClass wClass;
         private List<WordForm> forms = new List<WordForm>();
 
-
         public Word(string form, string pronunciation, string rhyme, string translation, 
-        string definition, PoS partOfSpeech, WordClass wClass, CentralStorage central)
+        string definition, WordClass wClass, CentralStorage central)
         {
             baseForm = form;
             basePron = pronunciation;
             baseRhyme = rhyme;
-            this.partOfSpeech = partOfSpeech;
+            this.partOfSpeech = wClass.GetPoS();
             this.wClass = wClass;
             this.translation = translation;
             this.definition = definition;
@@ -77,48 +76,67 @@ namespace semester_dictionary_main
         #endregion
 
         #region GETTERS
-        public string getForm()
+        public string GetForm()
         {
             return baseForm;
         }
 
-        public string getPronunciation()
+        public string GetPronunciation()
         {
             return basePron;
         }
 
-        public string getRhyme()
+        public string GetRhyme()
         {
             return baseRhyme;
         }
 
-        public string getTranslation()
+        public string GetTranslation()
         {
             return translation;
         }
 
-        public string getDefinition()
+        public string GetDefinition()
         {
             return definition;
         }
 
-        public PoS getPartOfSpeech()
+        public PoS GetPartOfSpeech()
         {
             return partOfSpeech;
         }
 
-        public WordClass getWordClass()
+        public WordClass GetWordClass()
         {
             return wClass;
+        }
+
+        public List<WordForm> GetWordForms()
+        {
+            return forms;
         }
         #endregion
 
         #region PUBLIC METHODS
+        public void UpdateDeclension(Declension declension)
+        {
+            foreach (WordForm form in forms)
+            {
+                if (form.GetDeclension() == declension)
+                {
+                    form.Update();
+                    break;
+                }
+            }
+        }
+
         public void Remove()
         {
+            /*
+             * Propagates removal to its children WordForms.
+             * May only be called from the central.
+             */
             DeleteWordForms();
-
-            central.RemoveWord(this);
         }
 
         public void ChangeForm(string newBase)
@@ -148,20 +166,24 @@ namespace semester_dictionary_main
             }
         }
 
-        public void changeTranslation(string newTrans)
+        public void ChangeTranslation(string newTrans)
         {
             translation = newTrans;
         }
 
-        public void changeDefinition(string newDef)
+        public void ChangeDefinition(string newDef)
         {
             definition = newDef;
         }
 
-        public void changeClass(WordClass newClass)
+        public void ChangeClass(WordClass newClass)
         {
+            wClass.RemoveWordFromSelf(this);
+            partOfSpeech.RemoveWordFromSelf(this);
             partOfSpeech = newClass.GetPoS();
+            partOfSpeech.AddWordToSelf(this);
             wClass = newClass;
+            wClass.AddWordToSelf(this);
             DeleteWordForms();
             CreateWordForms();
         }
@@ -213,12 +235,35 @@ namespace semester_dictionary_main
             this.central = central;
             parent = baseWord;
             declension = rule;
-            form = DeriveForm(parent.getForm(), declension.getFormTransform());
-            pronunciation = DeriveForm(parent.getPronunciation(), declension.getPronTransform());
-            this.rhyme = EvaluateRhyme(DeriveForm(parent.getRhyme(), declension.getRhymeTransform()));
+            form = DeriveForm(parent.GetForm(), declension.GetFormTransform());
+            pronunciation = DeriveForm(parent.GetPronunciation(), declension.GetPronunciationTransform());
+            this.rhyme = EvaluateRhyme(DeriveForm(parent.GetRhyme(), declension.GetRhymeTransform()));
             // assigns the wordform a rhyme group based on the transformed rhyme pattern of the parent
 
             central.AddWordForm(this);
+        }
+        #endregion
+
+        #region GETTERS
+        public Word GetParent()
+        {
+            return parent;
+        }
+        public string GetForm()
+        {
+            return form;
+        }
+        public string GetPronunciation()
+        {
+            return pronunciation;
+        }
+        public RhymeGroup GetRhymeGroup()
+        {
+            return rhyme;
+        }
+        public Declension GetDeclension()
+        {
+            return declension;
         }
         #endregion
 
@@ -231,18 +276,25 @@ namespace semester_dictionary_main
 
         public void ChangeForm(string newBase)
         {
-            form = DeriveForm(newBase, declension.getFormTransform());
+            form = DeriveForm(newBase, declension.GetFormTransform());
         }
 
         public void ChangePronunciation(string newBase)
         {
-            pronunciation = DeriveForm(newBase, declension.getPronTransform());
+            pronunciation = DeriveForm(newBase, declension.GetPronunciationTransform());
         }
 
         public void ChangeRhyme(string newBase)
         {
             RemoveSelfFromRhymeGroup();
             rhyme = EvaluateRhyme(newBase);
+        }
+
+        public void Update()
+        {
+            ChangeForm(parent.GetForm());
+            ChangePronunciation(parent.GetPronunciation());
+            ChangeRhyme(parent.GetRhyme());
         }
         #endregion
 
@@ -296,24 +348,34 @@ namespace semester_dictionary_main
         #endregion
 
         #region GETTERS
-        public string getName()
+        public string GetName()
         {
             return name;
         }
 
-        public List<TransformUnit> getFormTransform()
+        public List<TransformUnit> GetFormTransform()
         {
             return formTransform;
         }
 
-        public List<TransformUnit> getPronTransform()
+        public List<TransformUnit> GetPronunciationTransform()
         {
             return pronTransform;
         }
 
-        public List<TransformUnit> getRhymeTransform()
+        public List<TransformUnit> GetRhymeTransform()
         {
             return rhymeTransform;
+        }
+
+        public WordClass GetWordClass()
+        {
+            return parent;
+        }
+
+        public PoS GetPoS()
+        {
+            return parent.GetPoS();
         }
         #endregion
 
@@ -321,6 +383,53 @@ namespace semester_dictionary_main
         public void Rename(string newName)
         {
             name = newName;
+        }
+
+        public void AddFormTrans(TransformUnit transform)
+        {
+            AddTransform(transform, formTransform);
+        }
+        public void AddFormTrans(string identifier, string regex, string replace)
+        {
+            AddTransform(new TransformUnit(identifier, regex, replace), formTransform);
+        }
+
+        public void AddPronTrans(TransformUnit transform)
+        {
+            AddTransform(transform, pronTransform);
+        }
+        public void AddPronTrans(string identifier, string regex, string replace)
+        {
+            AddTransform(new TransformUnit(identifier, regex, replace), pronTransform);
+        }
+
+        public void AddRhymeTrans(TransformUnit transform)
+        {
+            AddTransform(transform, rhymeTransform);
+        }
+        public void AddRhymeTrans(string identifier, string regex, string replace)
+        {
+            AddTransform(new TransformUnit(identifier, regex, replace), rhymeTransform);
+        }
+
+
+
+        #endregion
+
+        #region PRIVATE METHODS
+        private void AddTransform(TransformUnit transform, List<TransformUnit> where)
+        {
+            where.Add(transform);
+            LetWordsKnowOfChange();
+        }
+        private void RemoveTransform(TransformUnit transform, List<TransformUnit> from)
+        {
+            from.Remove(transform);
+            LetWordsKnowOfChange();
+        }
+        private void LetWordsKnowOfChange()
+        {
+            parent.NotifyOfDeclensionChange(this);
         }
         #endregion
     }
@@ -332,6 +441,7 @@ namespace semester_dictionary_main
         private string name;
         private PoS parent;
         private List<Declension> declensions = new List<Declension>();
+        private List<Word> words = new List<Word>();
 
         public WordClass(string name, PoS parent, CentralStorage central)
         {
@@ -342,6 +452,10 @@ namespace semester_dictionary_main
         #endregion
 
         #region GETTERS
+        public string GetName()
+        {
+            return name;
+        }
         public List<Declension> GetDeclensions()
         {
             return declensions;
@@ -351,9 +465,32 @@ namespace semester_dictionary_main
         {
             return parent;
         }
+
+        public List<Word> GetWords()
+        {
+            return words;
+        }
         #endregion
 
         #region PUBLIC METHODS
+        public void NotifyOfDeclensionChange(Declension declension)
+        {
+            foreach (Word word in words)
+            {
+                word.UpdateDeclension(declension);
+            }
+        }
+
+        public void AddWordToSelf(Word word)
+        {
+            words.Add(word);
+        }
+        
+        public void RemoveWordFromSelf(Word word)
+        {
+            words.Remove(word);
+        }
+
         public void AddDeclension(string dName)
         {
             /* 
@@ -367,9 +504,9 @@ namespace semester_dictionary_main
             /*
              * may only be called by the parent PoS.
              */
-            foreach(Declension dec in declensions)
+            foreach(Declension dec in declensions) // ALPHABETICAL MODIFY
             {
-                if (dec.getName() == dName)
+                if (dec.GetName() == dName)
                 {
                     declensions.Remove(dec);
                     break;
@@ -382,9 +519,9 @@ namespace semester_dictionary_main
             /*
              * May only be called by the parent PoS
              */
-            foreach (Declension dec in declensions)
+            foreach (Declension dec in declensions) // ALPHABETICAL MODIFY
             {
-                if (dec.getName() == oldName)
+                if (dec.GetName() == oldName)
                 {
                     dec.Rename(newName);
                     break;
@@ -425,26 +562,53 @@ namespace semester_dictionary_main
         }
         #endregion
 
+        #region GETTERS
+        public string GetName()
+        {
+            return name;
+        }
+        public List<WordClass> GetWordClasses()
+        {
+            return wordClasses;
+        }
+        public List<Word> GetWords()
+        {
+            return words;
+        }
+
+        public List<string> GetDeclensions()
+        {
+            return declensions;
+        }
+        #endregion
+
         #region PUBLIC METHODS
         public void AddWordToSelf(Word word)
         {
             this.words.Add(word);
         }
+        public void RemoveWordFromSelf(Word word)
+        {
+            this.words.Remove(word);
+        }
 
-        public void AddWordClass(string name)
+        public WordClass AddWordClass(string name)
         {
             WordClass wClass = new WordClass(name, this, central);
             foreach (string declension in declensions)
             {
                 wClass.AddDeclension(declension);
             }
+            wordClasses.Add(wClass);
+            return wClass;
         }
 
         public void RemoveWordClass(WordClass wClass)
         {
             if (wordClasses.Count == 1)
             {
-                throw new InvalidOperationException("Trying to remove the only wordClass of a PoS. A PoS needs at least one word class to operate.")
+                throw new InvalidOperationException(
+                    "Trying to remove the only wordClass of a PoS. A PoS needs at least one word class to operate.");
             }
             wordClasses.Remove(wClass);
         }
@@ -453,7 +617,9 @@ namespace semester_dictionary_main
         {
             if (declensions.Contains(name))
             {
-                throw new ItemAlreadyExistsException(string.Format("Tried to create a declension with the name {0}, but it already exists.", name));
+                throw new ItemAlreadyExistsException(string.Format(
+                    "Tried to create a declension with the name {0}, but it already exists.",
+                    name));
             }
             declensions.Add(name);
             foreach (WordClass wClass in wordClasses)
@@ -466,7 +632,8 @@ namespace semester_dictionary_main
         {
             if (!declensions.Contains(name))
             {
-                throw new ItemNotFoundException(string.Format("Declension {0} was not found in this PoS.", name));
+                throw new ItemNotFoundException(string.Format(
+                    "Declension {0} was not found in this PoS.", name));
             }
             declensions.Remove(name);
             foreach(WordClass wClass in wordClasses)
@@ -479,11 +646,14 @@ namespace semester_dictionary_main
         {
             if (!declensions.Contains(oldName))
             {
-                throw new ItemNotFoundException(string.Format("Declension {0} was not found in this PoS.", oldName));
+                throw new ItemNotFoundException(string.Format(
+                    "Declension {0} was not found in this PoS.", oldName));
             }
             if (declensions.Contains(newName))
             {
-                throw new ItemAlreadyExistsException(string.Format("Tried to rename a declension to {0}, but one with that name already exists.", newName));
+                throw new ItemAlreadyExistsException(string.Format(
+                    "Tried to rename a declension to {0}, but one with that name already exists.",
+                    newName));
             }
 
             declensions.Remove(oldName);
@@ -493,6 +663,11 @@ namespace semester_dictionary_main
             {
                 wClass.RenameDeclension(oldName, newName);
             }
+        }
+
+        public void Rename(string newName)
+        {
+            name = newName;
         }
         #endregion
     }
@@ -538,15 +713,40 @@ namespace semester_dictionary_main
         #endregion
     }
 
-
     public class CentralStorage
     {
         #region ATTRIBUTES AND CONSTRUCTOR
         private List<Word> wordList = new List<Word>();
         private List<Word> transList = new List<Word>();
-        private List<WordForm> formList = new List<WordForm>();
+        // ^^^ will differ from wordList once alphabetical indexing gets implemented
+        private List<WordForm> formList = new List<WordForm>(); 
+        // ^^^ MAY NOT BE NEEDED: Consider, eventually delete.
         private List<PoS> PoSList = new List<PoS>();
         private List<RhymeGroup> RhymeGroupList = new List<RhymeGroup>();
+        #endregion
+
+        #region GETTERS
+        public List<Word> GetWordList()
+        {
+            return wordList;
+        }
+        public List<Word> GetTransList()
+        {
+            return transList;
+        }
+        public List<WordForm> GetFormList()
+        {
+            return formList;
+        }
+        public List<PoS> GetPoSList()
+        {
+            return PoSList;
+        }
+        public List<RhymeGroup> GetRhymeGroupList()
+        {
+            return RhymeGroupList;
+        }
+
         #endregion
 
         #region PUBLIC METHODS
@@ -554,7 +754,7 @@ namespace semester_dictionary_main
         {
             RhymeGroup? found = null;
 
-            foreach (RhymeGroup group in RhymeGroupList)
+            foreach (RhymeGroup group in RhymeGroupList) // ALPHABETICAL MODIFY
             {
                 if (group.GetID() == rhymeLiteral)
                 {
@@ -570,6 +770,7 @@ namespace semester_dictionary_main
 
             return found;
         }
+
         public void RemoveRhymeGroup(RhymeGroup group)
         {
             RhymeGroupList.Remove(group);
@@ -577,24 +778,146 @@ namespace semester_dictionary_main
 
         public void AddWordForm(WordForm form)
         {
+            /*
+             * May only be called from Word objects.
+             * MAY NOT BE NEEDED: Consider, eventually delete.
+             */
             formList.Add(form);
         }
 
         public void RemoveWordForm(WordForm form)
         {
+            /*
+             * May only be called from Word objects.
+             * MAY NOT BE NEEDED: Consider, eventually delete.
+             */
             formList.Remove(form);
         }
 
-        public void AddWord(Word word)
+        public Word AddWord(Word word)
         {
             wordList.Add(word);
             transList.Add(word);
+            word.GetPartOfSpeech().AddWordToSelf(word);
+            word.GetWordClass().AddWordToSelf(word);
+            return word;
+        }
+
+        public Word AddWord(string form, string pronunciation, string rhyme,
+            string translation, string definition, WordClass wClass)
+        {
+            return AddWord(new Word(form, pronunciation, rhyme, translation, definition,
+                wClass, this));
         }
 
         public void RemoveWord(Word word)
         {
             wordList.Remove(word);
             transList.Remove(word);
+            word.GetPartOfSpeech().RemoveWordFromSelf(word);
+            word.GetWordClass().RemoveWordFromSelf(word);
+        }
+
+        public void EditWord(Word word, string newForm, string newPron, string newRhyme,
+            string newTrans, string newDef, WordClass newClass)
+        {
+            word.ChangeForm(newForm);
+            word.ChangePronunciation(newPron);
+            word.ChangeRhyme(newRhyme);
+            word.ChangeTranslation(newTrans);
+            word.ChangeDefinition(newDef);
+            word.ChangeClass(newClass);
+        }
+
+        public PoS AddPoS(PoS partOfSpeech)
+        {
+            PoSList.Add(partOfSpeech);
+            return partOfSpeech;
+        }
+
+        public PoS AddPoS(string name)
+        {
+            return AddPoS(new PoS(name, this));
+        }
+
+        public void RemovePoS(PoS partOfSpeech)
+        {
+            PoSList.Remove(partOfSpeech);
+        }
+
+        public void RenamePoS(PoS partOfSpeech, string newName)
+        {
+            partOfSpeech.Rename(newName);
+        }
+
+        public WordClass CreateWordClass(PoS where, string name)
+        {
+            return where.AddWordClass(name);
+        }
+
+        public void RemoveWordClass(WordClass which)
+        {
+            which.GetPoS().RemoveWordClass(which);
+        }
+
+        public void RenameWordClass(WordClass which, string newName)
+        {
+            which.Rename(newName);
+        }
+
+        public void CreateDeclension(PoS where, string name)
+        {
+            where.AddDeclension(name);
+        }
+
+        public void CreateDeclension(string PoSname, string name)
+        {
+            foreach (PoS part in PoSList) // ALPHABETICAL MODIFY
+            {
+                if (part.GetName() == PoSname)
+                {
+                    CreateDeclension(part, name);
+                    break;
+                }
+            }
+        }
+
+        public void RemoveDeclension(PoS where, string name)
+        {
+            where.RemoveDeclension(name);
+        }
+
+        public void RenameDeclension(PoS where, string name, string newName)
+        {
+            where.RenameDeclension(name, newName);
+        }
+
+        public void AddDeclensionFormTransformUnit(Declension dec, TransformUnit unit)
+        {
+            dec.AddFormTrans(unit);
+        }
+        public void AddDeclensionFormTransformUnit(Declension dec, string id, 
+            string regex, string replace)
+        {
+            dec.AddFormTrans(id, regex, replace);
+        }
+        public void AddDeclensionPronTransformUnit(Declension dec, TransformUnit unit)
+        {
+            dec.AddPronTrans(unit);
+        }
+        public void AddDeclensionPronTransformUnit(Declension dec, string id,
+            string regex, string replace)
+        {
+            dec.AddPronTrans(id, regex, replace);
+        }
+        public void AddDeclensionRhymeTransformUnit(Declension dec, TransformUnit unit)
+        {
+            dec.AddRhymeTrans(unit);
+        }
+        public void AddDeclensionRhymeTransformUnit(Declension dec, string id,
+            string regex, string replace)
+        {
+            dec.AddRhymeTrans(id, regex, replace);
         }
         #endregion
 
@@ -609,6 +932,27 @@ namespace semester_dictionary_main
         #endregion
     }
 
+    static class CreateAllTest
+    {
+        public static void Test()
+        {
+            CentralStorage central = new CentralStorage();
+            PoS noun = central.AddPoS("Noun");
+            central.CreateDeclension(noun, "Nominative");
+            central.CreateDeclension(noun, "Accusative");
+            Declension nom = noun.GetWordClasses()[0].GetDeclensions()[0];
+            Declension acc = noun.GetWordClasses()[0].GetDeclensions()[1];
+            central.AddDeclensionFormTransformUnit(acc, "a$", "a$", "u");
+            central.AddDeclensionPronTransformUnit(acc, "ʌ$", "ʌ$", "ʏ");
+            central.AddDeclensionRhymeTransformUnit(acc, "a$", "a$", "u");
+            Word gleira = central.AddWord("gleira", "glɪː.ɾʌ", "-ra", "fish", "", noun.GetWordClasses()[0]);
+            List<WordForm> forms = gleira.GetWordForms();
+            foreach (WordForm form in forms)
+            {
+                Console.WriteLine(form.GetForm() + " " + form.GetPronunciation() + " " + form.GetRhymeGroup().GetID());
+            }
+        }
+    }
 
     internal static class Program
     {
@@ -618,6 +962,7 @@ namespace semester_dictionary_main
         [STAThread]
         static void Main()
         {
+            CreateAllTest.Test();
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
