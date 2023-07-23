@@ -995,6 +995,53 @@ namespace semester_dictionary_main
     }
 
 
+    static class RegexTest
+    {
+        public static bool UnitTest(
+            string origForm,
+            string IDRegex,
+            string transformRegex,
+            string replacement,
+            string finalForm
+            )
+        {
+            TransformUnit unit = new TransformUnit(IDRegex, transformRegex, replacement);
+            CentralStorage storage = new CentralStorage();
+            PoS pos = storage.AddPoS(new PoS("pos", storage));
+            WordClass wc = pos.GetWordClass("pos");
+            pos.AddDeclension("dec");
+            Declension dec = wc.GetDeclension("dec");
+            dec.AddFormTrans(unit);
+            Word word = storage.AddWord(origForm, "", "", "", "", wc);
+            if (word.GetWordForms()[0].GetForm() == finalForm)
+            {
+                return true;
+            }
+            else return false;
+        }
+
+        public static void Test(List<List<string>> args)
+        {
+            int sucCtr = 0;
+            int failCtr = 0;
+            int invCtr = 0;
+            foreach (List<string> lst in args)
+            {
+                if (lst.Count != 5)
+                {
+                    invCtr++;
+                    continue;
+                }
+                bool resp = UnitTest(lst[0], lst[1], lst[2], lst[3], lst[4]);
+                if (resp) sucCtr++;
+                else failCtr++;
+            }
+            Console.WriteLine(string.Format("Performed {0} tests, {1} invalid: {2} successful, {3} unsuccessful.",
+                sucCtr + failCtr, invCtr, sucCtr, failCtr));
+        }
+    }
+
+
     static class CreateAllTest
     {
         public static void Test()
