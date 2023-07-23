@@ -115,6 +115,22 @@ namespace semester_dictionary_main
         {
             return forms;
         }
+
+        public WordForm GetWordForm(string name)
+            /*
+             * returns a wordform with the given form, or null if
+             * such a form doesn't exist
+             */
+        {
+            foreach (WordForm form in forms) // ALPHABETICAL MODIFY
+            {
+                if (form.GetForm() == name)
+                {
+                    return form;
+                }
+            }
+            return null;
+        }
         #endregion
 
         #region PUBLIC METHODS
@@ -460,6 +476,22 @@ namespace semester_dictionary_main
         {
             return declensions;
         }
+        
+        public Declension GetDeclension(string name)
+            /*
+             * returns a declension object with the given name, or
+             * null if such declension doesn't exist.
+             */
+        {
+            foreach (Declension dec in declensions) // ALPHABETICAL MODIFY
+            {
+                if (dec.GetName() == name)
+                {
+                    return dec;
+                }
+            }
+            return null;
+        }
 
         public PoS GetPoS()
         {
@@ -570,6 +602,21 @@ namespace semester_dictionary_main
         public List<WordClass> GetWordClasses()
         {
             return wordClasses;
+        }
+        public WordClass GetWordClass(string name)
+        {
+            foreach (WordClass wc in wordClasses) // ALPHABETICAL MODIFY
+            /*
+             * returns a wordclass object of the given name, or null
+             * if such wordclass doesn't exist.
+             */
+            {
+                if (wc.GetName() == name)
+                {
+                    return wc;
+                }
+            }
+            return null;
         }
         public List<Word> GetWords()
         {
@@ -741,6 +788,21 @@ namespace semester_dictionary_main
         public List<PoS> GetPoSList()
         {
             return PoSList;
+        }
+        public PoS GetPoS(string name)
+            /*
+             * returns a PoS object of the given name, or null if 
+             * such PoS doesn't exist.
+             */
+        {
+            foreach (PoS pos in PoSList) // ALPHABETICAL MODIFY
+            {
+                if (pos.GetName() == name)
+                {
+                    return pos;
+                }
+            }
+            return null;
         }
         public List<RhymeGroup> GetRhymeGroupList()
         {
@@ -931,6 +993,7 @@ namespace semester_dictionary_main
         }
         #endregion
     }
+
 
     static class CreateAllTest
     {
