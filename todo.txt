@@ -1,0 +1,4 @@
+- implement ToString for all custom classes
+✓ implement focus parent
+- implement argless focus PoS, WordClass, RhymeGroup if Word is in focus
+- mark words as irregular
