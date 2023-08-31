@@ -164,6 +164,24 @@ namespace semester_dictionary_main
             }
         }
 
+        public void NewDeclension(Declension declension)
+        {
+            WordForm newForm = new WordForm(this, declension, central);
+            forms.Add(newForm);
+        }
+
+        public void RemovedDeclension(Declension declension)
+        {
+            foreach (WordForm form in forms)
+            {
+                if (form.GetDeclension() == declension)
+                {
+                    form.Remove();
+                    forms.Remove(form);
+                }
+            }
+        }
+
         public void Remove()
         {
             /*
@@ -596,7 +614,12 @@ namespace semester_dictionary_main
             /* 
              * may only be called by the parent PoS.
              */
-            declensions.Add(new Declension(dName, this, central));
+            Declension dec = new Declension(dName, this, central);
+            declensions.Add(dec);
+            foreach (Word word in words)
+            {
+                word.NewDeclension(dec);
+            }
         }
 
         public void RemoveDeclension(string dName)
@@ -609,6 +632,10 @@ namespace semester_dictionary_main
                 if (dec.GetName() == dName)
                 {
                     declensions.Remove(dec);
+                    foreach (Word word in words)
+                    {
+                        word.RemovedDeclension(dec);
+                    }
                     break;
                 }
             }
@@ -959,6 +986,7 @@ namespace semester_dictionary_main
                 if (group.GetID() == rhymeLiteral)
                 {
                     found = group;
+                    group.Insert(from);
                     break;
                 }
             }
@@ -1318,21 +1346,50 @@ namespace semester_dictionary_main
     {
         #region ATTRIBUTES AND CONSTRUCTOR
 
-        private Dictionary<string, string[]> Aliases = new Dictionary<string, string[]>();
+        //private Dictionary<string, string[]> Aliases = new Dictionary<string, string[]>();
 
         private CentralStorage central;
         private object? focus;
         private Declension? focusedTrUParent;
         private string? focusedTrUSection;
-        
+
+        private Dictionary<string, Action<string[]>> cmdFuncs = new Dictionary<string, Action<string[]>>()
+        {
+            
+        };
 
 
         public CommandCentre(CentralStorage central)
         {
             this.central = central;
-
-            string[] focusAliases = { "focus" , "fc" };
-            Aliases.Add("focus", focusAliases);
+            cmdFuncs["addpos"] = AddPoS;
+            cmdFuncs["rmpos"] = RmPoS;
+            cmdFuncs["rnmpos"] = RnmPoS;
+            cmdFuncs["lspos"] = LsPoS;
+            cmdFuncs["lsposw"] = LsPoSWrds;
+            cmdFuncs["addwc"] = AddWC;
+            cmdFuncs["rmwc"] = RmWC;
+            cmdFuncs["rnmwc"] = RnmWC;
+            cmdFuncs["lswc"] = LsWC;
+            cmdFuncs["adddc"] = AddDc;
+            cmdFuncs["rmdc"] = RmDc;
+            cmdFuncs["rnmdc"] = RnmDc;
+            cmdFuncs["lsdc"] = LsDc;
+            cmdFuncs["addw"] = AddW;
+            cmdFuncs["rmw"] = RmW;
+            cmdFuncs["edw"] = EdW;
+            cmdFuncs["edwtr"] = EdWTrn;
+            cmdFuncs["edwdef"] = EdWDef;
+            cmdFuncs["edwcls"] = EdWCls;
+            cmdFuncs["lsw"] = LsW;
+            cmdFuncs["rhm"] = Rhm;
+            cmdFuncs["lswf"] = LsWfm;
+            cmdFuncs["edwf"] = EdWfm;
+            cmdFuncs["addtu"] = AddTr;
+            cmdFuncs["rmtu"] = RmTr;
+            cmdFuncs["lstu"] = LsTr;
+            cmdFuncs["focus"] = Focus;
+            cmdFuncs["help"] = Help;
         }
 
         #endregion
@@ -1345,27 +1402,25 @@ namespace semester_dictionary_main
              * Waits for a command in the terminal.
              * Blocking function.
              */
-
+            Console.Write("> ");
             string line = Console.ReadLine();
             string[] args = line.Split(" ");
-            string command = args[0];
+            string command = args[0].ToLower();
             args = args.Skip(1).ToArray();
 
             // decode command
 
-            foreach ( string key in Aliases.Keys)
+            if (cmdFuncs.ContainsKey(command))
             {
-                foreach (string alias in Aliases[key])
-                {
-                    if (command.ToLower() == alias)
-                    {
-                        // call the function somehow???
-                    }
-                }
+                cmdFuncs[command](args);
+            }
+            else
+            {
+                Console.WriteLine(string.Format("Unknown command '{0}'. Type 'help' for a list of commands.", command));
             }
 
             //call the appropriate function
-            
+
         }
 
         #endregion
@@ -1379,7 +1434,10 @@ namespace semester_dictionary_main
             {
                 str += lst[i] + ", ";
             }
-            str += lst.Last();
+            if (lst.Count > 0)
+            {
+                str += lst.Last();
+            }
             return str;
         }
 
@@ -1427,14 +1485,17 @@ namespace semester_dictionary_main
                 if (focus.GetType() == typeof(Declension))
                 {
                     focus = ((Declension)focus).GetWordClass();
+                    Console.WriteLine(string.Format("Now in focus: {0} (word class)", ((WordClass)focus).GetName()));
                 }
                 else if (focus.GetType() == typeof(WordClass))
                 {
                     focus = ((WordClass)focus).GetPoS();
+                    Console.WriteLine(string.Format("Now in focus: {0} (part of speech)", ((PoS)focus).GetName()));
                 }
                 else if (focus.GetType() == typeof(WordForm))
                 {
                     focus = ((WordForm)focus).GetParent();
+                    Console.WriteLine(string.Format("Now in focus: {0} (word)", ((Word)focus).GetForm()));
                 }
                 else
                 {
@@ -1537,6 +1598,7 @@ namespace semester_dictionary_main
                 {
                     // focus on the wclass
                     focus = ((PoS)focus).GetWordClass(arg);
+                    Console.WriteLine(string.Format("Now in focus: {0}", ((WordClass)focus).GetName()));
                 }
                 else
                 {
@@ -1559,6 +1621,7 @@ namespace semester_dictionary_main
                 {
                     // focus on the declension
                     focus = ((WordClass)focus).GetDeclension(arg);
+                    Console.WriteLine(string.Format("Now in focus: {0}", ((Declension)focus).GetName()));
                 }
                 else
                 {
@@ -1649,6 +1712,7 @@ namespace semester_dictionary_main
                 {
                     // focus on the wform
                     focus = ((Word)focus).GetWordFormByDeclension(arg);
+                    Console.WriteLine(string.Format("Now in focus: {0} ({1} of {2})", ((WordForm)focus).GetForm(), ((WordForm)focus).GetDeclension().GetName(), ((WordForm)focus).GetParent().GetForm()));
                 }
                 else
                 {
@@ -1789,7 +1853,7 @@ namespace semester_dictionary_main
             }
         }
 
-        private void Help(string[] args)
+        private void Help(string[] args)    
         {
             /*
              * Helps the user with the commands.
@@ -1878,7 +1942,7 @@ namespace semester_dictionary_main
                         { "short" , "Lists all word classes of a part of speech."},
                         { "args", "Takes no arguments." },
                         { "focus", "A part of speech in focus is required to run this command." },
-                        { "note", "" }
+                        { "note", "In each part of speech, you will see a word class with a name identical to the part of speech, in addition to your own custom word classes. This is because a part of speech cannot function without at least one word class. Feel free to delete this word class after introducing your own." }
                     }
                 },
                 {
@@ -2035,21 +2099,12 @@ namespace semester_dictionary_main
                     }
                 },
                 {
-                    "", new Dictionary<string, string>()
+                    "focus", new Dictionary<string, string>()
                     {
-                        { "short" , "focus"},
+                        { "short" , "Puts an object in focus."},
                         { "args", "Takes 0, 1, or 2 arguments.\n0 arguments:\n· Names the object currently in focus.\n1 argument:\n· parent: switches focus to the current focus' parent, if it exists.\n2 arguments (arguments in brackets to be replaced with object names):\n· pos <name>: focus on a part of speech.\n· wc <name>: focus on a word class. Requires focus on a PoS.\n· dc <name>: focus on a declension. Requires focus on a word class.\n· w <word>: focus on a word using its base form.\n· nt <word> focus on a word using its translation to your native language.\n· wf <declension name>: focus on a word form using the name of its declension. Requires a word in focus.\n· tr <f/p/r>: focus on a transform unit. only write one letter our of the three. It determines, whether you're choosing from form, pronunciation, or rhyme pattern transform units. Requires focus on a declension." },
                         { "focus", "Some objects require prior focus on their parents." },
-                        { "note", "" }
-                    }
-                },
-                {
-                    "", new Dictionary<string, string>()
-                    {
-                        { "short" , ""},
-                        { "args", "" },
-                        { "focus", "" },
-                        { "note", "" }
+                        { "note", "Some commands are easier to use when an object is in focus. Others require focus to even function. You can think of focus as a directory structure." }
                     }
                 },
             };
@@ -2068,7 +2123,7 @@ namespace semester_dictionary_main
             {
                 if (cmdHelp.Keys.Contains(args[0].ToLower()))
                 {
-                    Console.WriteLine(string.Format("{0}\n\n{1}\n\n{2}\n\n{3}", args[0].ToLower(), cmdHelp[args[0].ToLower()]["short"], cmdHelp[args[0].ToLower()]["args"], cmdHelp[args[0].ToLower()]["focus"], cmdHelp[args[0].ToLower()]["note"]));
+                    Console.WriteLine(string.Format("{0}\n\n{1}\n\n{2}\n\n{3}\n\n{4}", args[0].ToLower(), cmdHelp[args[0].ToLower()]["short"], cmdHelp[args[0].ToLower()]["args"], cmdHelp[args[0].ToLower()]["focus"], cmdHelp[args[0].ToLower()]["note"]));
                 }
                 else
                 {
@@ -2633,14 +2688,17 @@ namespace semester_dictionary_main
                     if (formAliases.Contains(args[0].ToLower()))
                     {
                         central.AddDeclensionFormTransformUnit((Declension)focus, unit);
+                        Console.WriteLine(string.Format("Added the transform unit to {0}", ((Declension)focus).GetName()));
                     }
                     else if (pronAliases.Contains(args[0].ToLower()))
                     {
                         central.AddDeclensionPronTransformUnit((Declension)focus, unit);
+                        Console.WriteLine(string.Format("Added the transform unit to {0}", ((Declension)focus).GetName()));
                     }
                     else if (rhymeAliases.Contains(args[0].ToLower()))
                     {
                         central.AddDeclensionRhymeTransformUnit((Declension)focus, unit);
+                        Console.WriteLine(string.Format("Added the transform unit to {0}", ((Declension)focus).GetName()));
                     }
                     else
                     {
@@ -3016,7 +3074,7 @@ namespace semester_dictionary_main
                 if (args.Length == 0)
                 {
                     List<WordForm> forms = ((Word)focus).GetWordForms();
-                    Console.WriteLine(string.Format("Declensions of {0}", ((Word)focus).GetForm()));
+                    Console.WriteLine(string.Format("Declensions of {0}:", ((Word)focus).GetForm()));
                     foreach (WordForm form in forms)
                     {
                         Console.WriteLine(string.Format("· {0}: {1} /{2}/", form.GetDeclension().GetName(), form.GetForm(), form.GetPronunciation()));
@@ -3080,7 +3138,13 @@ namespace semester_dictionary_main
             // ApplicationConfiguration.Initialize();
             // Application.Run(new Form1());
 
+            CentralStorage central = new CentralStorage();
+            CommandCentre cc = new CommandCentre(central);
 
+            while (true)
+            {
+                cc.WaitForCommand();
+            }
         }
     }
 }
