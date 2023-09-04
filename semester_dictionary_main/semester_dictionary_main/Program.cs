@@ -75,6 +75,11 @@ namespace semester_dictionary_main
 
             CreateWordForms();
         }
+
+        public override string ToString()
+        {
+            return "Word: " + baseForm;
+        }
         #endregion
 
         #region GETTERS
@@ -301,6 +306,11 @@ namespace semester_dictionary_main
 
             central.AddWordForm(this);
         }
+
+        public override string ToString()
+        {
+            return "Wordform: " + form;
+        }
         #endregion
 
         #region GETTERS
@@ -419,6 +429,11 @@ namespace semester_dictionary_main
             this.name = name;
             this.parent = parent;
             this.central = central;
+        }
+
+        public override string ToString()
+        {
+            return "Declension: " + name;
         }
         #endregion
 
@@ -550,6 +565,11 @@ namespace semester_dictionary_main
             this.name = name;
             this.parent = parent;
             this.central = central;
+        }
+
+        public override string ToString()
+        {
+            return "Word Class: " + name;
         }
         #endregion
 
@@ -692,6 +712,11 @@ namespace semester_dictionary_main
             this.name = name;
             this.central = central;
             AddWordClass(name); // each PoS needs at least one WordClass to operate.
+        }
+
+        public override string ToString()
+        {
+            return "PoS: " + name;
         }
         #endregion
 
@@ -881,9 +906,9 @@ namespace semester_dictionary_main
     {
         #region ATTRIBUTES AND CONSTRUCTOR
         private List<Word> wordList = new List<Word>();
-        private List<Word> transList = new List<Word>();
+        // private List<Word> transList = new List<Word>();
         // ^^^ will differ from wordList once alphabetical indexing gets implemented
-        private List<WordForm> formList = new List<WordForm>(); 
+        // private List<WordForm> formList = new List<WordForm>(); 
         // ^^^ MAY NOT BE NEEDED: Consider, eventually delete.
         private List<PoS> PoSList = new List<PoS>();
         private List<RhymeGroup> RhymeGroupList = new List<RhymeGroup>();
@@ -894,14 +919,14 @@ namespace semester_dictionary_main
         {
             return wordList;
         }
-        public List<Word> GetTransList()
+        /*public List<Word> GetTransList()
         {
             return transList;
         }
         public List<WordForm> GetFormList()
         {
             return formList;
-        }
+        }*/
         public List<PoS> GetPoSList()
         {
             return PoSList;
@@ -1010,7 +1035,7 @@ namespace semester_dictionary_main
              * May only be called from Word objects.
              * MAY NOT BE NEEDED: Consider, eventually delete.
              */
-            formList.Add(form);
+            //formList.Add(form);
         }
 
         public void RemoveWordForm(WordForm form)
@@ -1019,13 +1044,13 @@ namespace semester_dictionary_main
              * May only be called from Word objects.
              * MAY NOT BE NEEDED: Consider, eventually delete.
              */
-            formList.Remove(form);
+            //formList.Remove(form);
         }
 
         public Word AddWord(Word word)
         {
             wordList.Add(word);
-            transList.Add(word);
+            //transList.Add(word);
             word.GetPartOfSpeech().AddWordToSelf(word);
             word.GetWordClass().AddWordToSelf(word);
             return word;
@@ -1048,7 +1073,7 @@ namespace semester_dictionary_main
         public void RemoveWord(Word word)
         {
             wordList.Remove(word);
-            transList.Remove(word);
+            //transList.Remove(word);
             word.GetPartOfSpeech().RemoveWordFromSelf(word);
             word.GetWordClass().RemoveWordFromSelf(word);
         }
@@ -1273,75 +1298,6 @@ namespace semester_dictionary_main
     }
 
 
-    static class RegexTest
-    {
-        public static bool UnitTest(
-            string origForm,
-            string IDRegex,
-            string transformRegex,
-            string replacement,
-            string finalForm
-            )
-        {
-            TransformUnit unit = new TransformUnit(IDRegex, transformRegex, replacement);
-            CentralStorage storage = new CentralStorage();
-            PoS pos = storage.AddPoS(new PoS("pos", storage));
-            WordClass wc = pos.GetWordClass("pos");
-            pos.AddDeclension("dec");
-            Declension dec = wc.GetDeclension("dec");
-            dec.AddFormTrans(unit);
-            Word word = storage.AddWord(origForm, "", "", "", "", wc);
-            if (word.GetWordForms()[0].GetForm() == finalForm)
-            {
-                return true;
-            }
-            else return false;
-        }
-
-        public static void Test(List<List<string>> args)
-        {
-            int sucCtr = 0;
-            int failCtr = 0;
-            int invCtr = 0;
-            foreach (List<string> lst in args)
-            {
-                if (lst.Count != 5)
-                {
-                    invCtr++;
-                    continue;
-                }
-                bool resp = UnitTest(lst[0], lst[1], lst[2], lst[3], lst[4]);
-                if (resp) sucCtr++;
-                else failCtr++;
-            }
-            Console.WriteLine(string.Format("Performed {0} tests, {1} invalid: {2} successful, {3} unsuccessful.",
-                sucCtr + failCtr, invCtr, sucCtr, failCtr));
-        }
-    }
-
-
-    static class CreateAllTest
-    {
-        public static void Test()
-        {
-            CentralStorage central = new CentralStorage();
-            PoS noun = central.AddPoS("Noun");
-            central.CreateDeclension(noun, "Nominative");
-            central.CreateDeclension(noun, "Accusative");
-            Declension nom = noun.GetWordClasses()[0].GetDeclensions()[0];
-            Declension acc = noun.GetWordClasses()[0].GetDeclensions()[1];
-            central.AddDeclensionFormTransformUnit(acc, "a$", "a$", "u");
-            central.AddDeclensionPronTransformUnit(acc, "ʌ$", "ʌ$", "ʏ");
-            central.AddDeclensionRhymeTransformUnit(acc, "a$", "a$", "u");
-            Word gleira = central.AddWord("gleira", "glɪː.ɾʌ", "-ra", "fish", "", noun.GetWordClasses()[0]);
-            List<WordForm> forms = gleira.GetWordForms();
-            foreach (WordForm form in forms)
-            {
-                Console.WriteLine(form.GetForm() + " " + form.GetPronunciation() + " " + form.GetRhymeGroup().GetID());
-            }
-        }
-    }
-
     public class CommandCentre
     {
         #region ATTRIBUTES AND CONSTRUCTOR
@@ -1403,7 +1359,15 @@ namespace semester_dictionary_main
              * Blocking function.
              */
             Console.Write("> ");
-            string line = Console.ReadLine();
+            CallCommand(Console.ReadLine());
+            
+        }
+
+        public void CallCommand(string line)
+        {
+            /* Decodes a command and calls the appropriate function.
+             * Split from WaitForCommand for the purpose of unit testing.
+             */
             string[] args = line.Split(" ");
             string command = args[0].ToLower();
             args = args.Skip(1).ToArray();
@@ -1418,9 +1382,6 @@ namespace semester_dictionary_main
             {
                 Console.WriteLine(string.Format("Unknown command '{0}'. Type 'help' for a list of commands.", command));
             }
-
-            //call the appropriate function
-
         }
 
         #endregion
