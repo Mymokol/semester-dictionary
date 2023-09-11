@@ -1435,6 +1435,12 @@ namespace rosalinds_dictionary
 
         private void Serialise(string path, CentralStorage storage)
         {
+            const string saveDir = "savefiles";
+            if (!Directory.Exists(saveDir))
+            {
+                Directory.CreateDirectory(saveDir);
+            }
+
             using (FileStream fs = new FileStream(path, FileMode.Create))
             {
                 BinaryFormatter formatter = new BinaryFormatter();
