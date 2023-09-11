@@ -2,7 +2,9 @@
 using System.ComponentModel;
 using System.Diagnostics.Tracing;
 using System.DirectoryServices;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace semester_dictionary_main
 {
@@ -29,10 +31,11 @@ namespace semester_dictionary_main
         public ItemNotFoundException(string message) : base(message) { }
         public ItemNotFoundException(string message, Exception inner) : base(message, inner) { }
     }
-        #endregion
+    #endregion
 
 
     #region STRUCTURES
+    [Serializable]
     public struct TransformUnit
     {
         public string identifier = "";
@@ -47,7 +50,7 @@ namespace semester_dictionary_main
         }
     }
     #endregion
-
+    [Serializable]
     public class Word
     {
         #region ATTRIBUTES AND CONSTRUCTOR
@@ -286,7 +289,7 @@ namespace semester_dictionary_main
         }
         #endregion
     }
-
+    [Serializable]
     public class WordForm
     {
         #region ATTRIBUTES AND CONSTRUCTOR
@@ -420,7 +423,7 @@ namespace semester_dictionary_main
         }
         #endregion
     }
-
+    [Serializable]
     public class Declension
     {
         #region ATTRIBUTES AND CONSTRUCTOR
@@ -557,7 +560,7 @@ namespace semester_dictionary_main
         }
         #endregion
     }
-
+    [Serializable]
     public class WordClass
     {
         #region ATTRIBUTES AND CONSTRUCTOR
@@ -695,7 +698,7 @@ namespace semester_dictionary_main
         }
         #endregion
     }
-
+    [Serializable]
     public class PoS
     {
         /*
@@ -862,7 +865,7 @@ namespace semester_dictionary_main
         }
         #endregion
     }
-
+    [Serializable]
     public class RhymeGroup
     {
         #region ATTRIBUTES AND CONSTRUCTOR
@@ -908,7 +911,7 @@ namespace semester_dictionary_main
 
         #endregion
     }
-
+    [Serializable]
     public class CentralStorage
     {
         #region ATTRIBUTES AND CONSTRUCTOR
@@ -1354,6 +1357,8 @@ namespace semester_dictionary_main
             cmdFuncs["lstu"] = LsTr;
             cmdFuncs["focus"] = Focus;
             cmdFuncs["help"] = Help;
+            cmdFuncs["save"] = Save;
+            cmdFuncs["load"] = Load;
         }
 
         #endregion
@@ -1395,6 +1400,22 @@ namespace semester_dictionary_main
         #endregion
 
         #region AUXILIARY PRIVATE METHODS
+
+        private void Serialise(string path, CentralStorage storage)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Create))
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(fs, central);
+            }
+        }
+
+        private CentralStorage Deserialise(string path)
+        {
+            FileStream fs = new FileStream(path, FileMode.Open);
+            BinaryFormatter formatter = new BinaryFormatter();
+            return (CentralStorage)formatter.Deserialize(fs);
+        }
 
         private string ConcatenateList(List<string> lst)
         {
@@ -1822,7 +1843,7 @@ namespace semester_dictionary_main
             }
         }
 
-        private void Help(string[] args)    
+        private void Help(string[] args)
         {
             /*
              * Helps the user with the commands.
@@ -2103,6 +2124,38 @@ namespace semester_dictionary_main
             {
                 Console.WriteLine("Type 'help' without arguments to get a list of commands. The help command only takes one argument at maximum.");
             }
+        }
+
+        private void Save(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                Console.WriteLine("Takes exactly 1 argument.\nType 'help save' for more info.");
+                return;
+            }
+            if (!args[0].EndsWith(".dat"))
+            {
+                args[0] = args[0] + ".dat";
+            }
+            // check if filepath is valid
+            // check if file is used
+            Serialise(args[0], central);
+        }
+
+        private void Load(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                Console.WriteLine("Takes exactly 1 argument.\nType 'help load' fpr more info.");
+                return;
+            }
+            if (!args[0].EndsWith(".dat"))
+            {
+                args[0] = args[0] + ".dat";
+            }
+            // check if user really wants to load
+            // check if file exists and is valid
+            central = Deserialise(args[0]);
         }
 
         #endregion
