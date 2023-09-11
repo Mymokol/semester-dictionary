@@ -1393,8 +1393,6 @@ namespace rosalinds_dictionary
             string command = args[0].ToLower();
             args = args.Skip(1).ToArray();
 
-            // decode command
-
             // hard-coded exit:
 
             if (command == "exit")
@@ -1417,6 +1415,8 @@ namespace rosalinds_dictionary
                     return false;
                 }
             }
+
+            // decode command
 
             if (cmdFuncs.ContainsKey(command))
             {
@@ -1560,12 +1560,12 @@ namespace rosalinds_dictionary
                     ls = ((Declension)focus).GetFormTransform();
                     tempSignifier = "f";
                 }
-                else if (formAliases.Contains(arg.ToLower()))
+                else if (pronAliases.Contains(arg.ToLower()))
                 {
                     ls = ((Declension)focus).GetPronunciationTransform();
                     tempSignifier = "p";
                 }
-                else if (formAliases.Contains(arg.ToLower()))
+                else if (rhymeAliases.Contains(arg.ToLower()))
                 {
                     ls = ((Declension)focus).GetRhymeTransform();
                     tempSignifier = "r";
