@@ -159,6 +159,9 @@ namespace semester_dictionary_main
         #region PUBLIC METHODS
         public void UpdateDeclension(Declension declension)
         {
+            /* 
+             * Updates a single WordForm that corresponds to the given declension.
+             */
             foreach (WordForm form in forms)
             {
                 if (form.GetDeclension() == declension)
@@ -339,6 +342,10 @@ namespace semester_dictionary_main
         #region PUBLIC METHODS
         public void Remove()
         {
+            /* 
+             * Propagates information about its own removal to
+             * the CentralStorage and its rhymeGroup
+             */
             central.RemoveWordForm(this);
             rhyme.RemoveForm(this);
         }
@@ -1073,6 +1080,7 @@ namespace semester_dictionary_main
         public void RemoveWord(Word word)
         {
             wordList.Remove(word);
+            word.Remove();
             //transList.Remove(word);
             word.GetPartOfSpeech().RemoveWordFromSelf(word);
             word.GetWordClass().RemoveWordFromSelf(word);
@@ -1119,7 +1127,7 @@ namespace semester_dictionary_main
             word.ChangeClass(newClass);
         }
 
-        public Word GetWord(string name)
+        public Word? GetWord(string name)
         {
             /*
              * Returns the first word with the given name.
@@ -1134,7 +1142,7 @@ namespace semester_dictionary_main
             return null;
         }
 
-        public Word GetWordByTrans(string name)
+        public Word? GetWordByTrans(string name)
         {
             foreach (Word word in wordList) // ALPHABETICAL MODIFY
             {
@@ -2357,26 +2365,38 @@ namespace semester_dictionary_main
                 if (args.Length > 0)
                 {
                     List<string> succ = new List<string>();
-                    List<string> fail = new List<string>();
+                    List<string> notFound = new List<string>();
+                    List<string> lastOne = new List<string>();
                     foreach (string s in args)
                     {
                         if (((PoS)focus).CheckWordClass(s))
                         {
-                            central.RemoveWordClass(((PoS)focus).GetWordClass(s));
-                            succ.Add(s);
+                            if (((PoS)focus).GetWordClasses().Count() == 1)
+                            {
+                                lastOne.Add(s);
+                            }
+                            else
+                            {
+                                central.RemoveWordClass(((PoS)focus).GetWordClass(s));
+                                succ.Add(s);
+                            }
                         }
                         else
                         {
-                            fail.Add(s);
+                            notFound.Add(s);
                         }
                     }
                     if (succ.Count > 0)
                     {
                         Console.WriteLine(string.Format("Successfully removed classes {0} from part of speech {1}.", ConcatenateList(succ), ((PoS)focus).GetName()));
                     }
-                    if (fail.Count > 0)
+                    if (notFound.Count > 0)
                     {
-                        Console.WriteLine(string.Format("Classes {0} not found in part of speech {1}.", ConcatenateList(fail), ((PoS)focus).GetName()));
+                        Console.WriteLine(string.Format("Classes {0} not found in part of speech {1}.", ConcatenateList(notFound), ((PoS)focus).GetName()));
+                    }
+                    if (lastOne.Count > 0)
+                    {
+                        Console.WriteLine(string.Format("Class {0} could not be removed, as it was the last word class present in part of speech {1}.\nParts of speech need at least one word class to operate.", ConcatenateList(lastOne), ((PoS)focus).GetName()));
                     }
                 }
                 else
