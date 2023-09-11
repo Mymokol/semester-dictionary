@@ -187,6 +187,7 @@ namespace rosalinds_dictionary
                 {
                     form.Remove();
                     forms.Remove(form);
+                    break;
                 }
             }
         }
