@@ -1079,6 +1079,10 @@ namespace rosalinds_dictionary
 
         public void RemoveWord(Word word)
         {
+            if (!wordList.Contains(word))
+            {
+                throw new ItemNotFoundException(string.Format("Word {0} not found in the word list.", word.GetForm()));
+            }
             wordList.Remove(word);
             word.Remove();
             //transList.Remove(word);
@@ -2498,7 +2502,7 @@ namespace rosalinds_dictionary
                     {
                         WordClass cls = ((PoS)focus).GetWordClass(args[0]);
                         string oldName = cls.GetName();
-                        central.RenameWordClass(cls, args[0]);
+                        central.RenameWordClass(cls, args[1]);
                         Console.WriteLine("Successfully renamed class {0} to {1}", oldName, cls.GetName());
                     }
                     else
@@ -2915,6 +2919,10 @@ namespace rosalinds_dictionary
                 focus = null;
                 Console.WriteLine(string.Format("Removed word {0}", name));
             }
+            else
+            {
+                Console.WriteLine("Needs a word in focus.\nType 'help focus' for more info.");
+            }
         }
 
         private void EdW(string[] args)
@@ -2934,6 +2942,8 @@ namespace rosalinds_dictionary
                     string oldPron = ((Word)focus).GetPronunciation();
                     string oldRhyme = ((Word)focus).GetRhyme();
                     central.EditWordForm((Word)focus, args[0]);
+                    central.EditWordPronunciation((Word)focus, args[1]);
+                    central.EditWordRhyme((Word)focus, args[2]);
                     Console.WriteLine(string.Format("Changed the word from {0} /{1}/, rhyming with {2}, to {3} /{4}/, rhyming with {5}", oldForm, oldPron, oldRhyme, args[0], args[1], args[2]));
                 }
                 else
