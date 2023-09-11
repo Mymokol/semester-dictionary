@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 
@@ -1360,33 +1361,61 @@ namespace rosalinds_dictionary
             cmdFuncs["help"] = Help;
             cmdFuncs["save"] = Save;
             cmdFuncs["load"] = Load;
+            cmdFuncs["lsfiles"] = LsFiles;
+            cmdFuncs["newfile"] = NewFile;
         }
 
         #endregion
 
         #region PUBLIC METHODS
 
-        public void WaitForCommand()
+        public bool WaitForCommand()
         {
             /*
              * Waits for a command in the terminal.
              * Blocking function.
+             * Return value signifies whether the program should keep running, or whether it should halt.
              */
             Console.Write("> ");
-            CallCommand(Console.ReadLine());
+            return CallCommand(Console.ReadLine());
 
         }
 
-        public void CallCommand(string line)
+        public bool CallCommand(string line)
         {
-            /* Decodes a command and calls the appropriate function.
+            /* 
+             * Decodes a command and calls the appropriate function.
              * Split from WaitForCommand for the purpose of unit testing.
+             * Return value signifies whether the program should keep running, or whether it should halt.
              */
             string[] args = line.Split(" ");
             string command = args[0].ToLower();
             args = args.Skip(1).ToArray();
 
             // decode command
+
+            // hard-coded exit:
+
+            if (command == "exit")
+            {
+                Console.Write("Exit the application? Progress will not be automatically saved and will be lost unless you saved it manually.\nEnter 'y' or 'n': ");
+                string answer = Console.ReadLine().ToLower();
+                while (answer != "y" && answer != "n")
+                {
+                    Console.Write("Invalid answer. Please only type 'y' or 'n', without the apostrophes: ");
+                    answer = Console.ReadLine();
+                }
+                if (answer == "n")
+                {
+                    Console.WriteLine("Exiting cancelled.");
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine("Exiting the application.");
+                    return false;
+                }
+            }
 
             if (cmdFuncs.ContainsKey(command))
             {
@@ -1396,6 +1425,7 @@ namespace rosalinds_dictionary
             {
                 Console.WriteLine(string.Format("Unknown command '{0}'. Type 'help' for a list of commands.", command));
             }
+            return true;
         }
 
         #endregion
@@ -2092,12 +2122,57 @@ namespace rosalinds_dictionary
                 {
                     "focus", new Dictionary<string, string>()
                     {
-                        { "short" , "Puts an object in focus."},
+                        { "short", "Puts an object in focus."},
                         { "args", "Takes 0, 1, or 2 arguments.\n0 arguments:\n· Names the object currently in focus.\n1 argument:\n· parent: switches focus to the current focus' parent, if it exists.\n2 arguments (arguments in brackets to be replaced with object names):\n· pos <name>: focus on a part of speech.\n· wc <name>: focus on a word class. Requires focus on a PoS.\n· dc <name>: focus on a declension. Requires focus on a word class.\n· w <word>: focus on a word using its base form.\n· nt <word> focus on a word using its translation to your native language.\n· wf <declension name>: focus on a word form using the name of its declension. Requires a word in focus.\n· tr <f/p/r>: focus on a transform unit. only write one letter our of the three. It determines, whether you're choosing from form, pronunciation, or rhyme pattern transform units. Requires focus on a declension." },
                         { "focus", "Some objects require prior focus on their parents." },
                         { "note", "Some commands are easier to use when an object is in focus. Others require focus to even function. You can think of focus as a directory structure." }
                     }
                 },
+                {
+                    "save", new Dictionary<string, string>()
+                    {
+                        { "short", "Saves a currently open dictionary to a file." },
+                        { "args", "Takes exactly 1 argument: The filename. It may not contain spaces." },
+                        { "focus", "This command does not incorporate focus." },
+                        { "note", "" }
+                    }
+                },
+                {
+                    "load", new Dictionary<string, string>()
+                    {
+                        { "short", "Loads a dictionary from a file." },
+                        { "args", "Takes exactly one argument: The filename. It may not contain spaces." },
+                        { "focus", "This command does not incorporate focus." },
+                        { "note", "This will override any currently open dictionary and all unsaved changes will be lost." }
+                    }
+                },
+                {
+                    "lsfiles", new Dictionary<string, string>()
+                    {
+                        { "short", "Lists all savefiles in the dedicated savefile folder for Rosalind's Dictionary." },
+                        { "args", "Takes no arguments." },
+                        { "focus", "This command does not incorporate focus." },
+                        { "note", "This command can only see .dat files and can not see inside nested directories." }
+                    }
+                },
+                {
+                    "newfile", new Dictionary<string, string>()
+                    {
+                        { "short", "Creates an empty new dictionary." },
+                        { "args", "Takes no arguments." },
+                        { "focus", "This command does not incorporate focus." },
+                        { "note", "This will override any currently open dictionary ad all unsaved changes will be lost." }
+                    }
+                },
+                {
+                    "exit", new Dictionary<string, string>()
+                    {
+                        { "short", "Closes the program." },
+                        { "args", "Takes no arguments." },
+                        { "focus", "This command does not incorporate focus." },
+                        { "note", "Does not save the dictionary - all unsaved progress will be lost. Saving must be done manually before exiting." }
+                    }
+                }
             };
             if (args.Length == 0)
             {
@@ -2129,34 +2204,133 @@ namespace rosalinds_dictionary
 
         private void Save(string[] args)
         {
+            const string saveDir = "savefiles";
             if (args.Length != 1)
             {
-                Console.WriteLine("Takes exactly 1 argument.\nType 'help save' for more info.");
+                Console.WriteLine("Takes exactly 1 argument. The filename may not include spaces.\nType 'help save' for more info.");
                 return;
             }
+            // check if filepath is valid
+            if (args[0].IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            {
+                Console.WriteLine(string.Format("'{0}' contains invalid characters. Please try again with a valid file name.", args[0]));
+                return;
+            }
+            // add .dat if needed
             if (!args[0].EndsWith(".dat"))
             {
                 args[0] = args[0] + ".dat";
             }
-            // check if filepath is valid
+            string path = Path.Combine(saveDir, args[0]);
             // check if file is used
-            Serialise(args[0], central);
+            if (File.Exists(path))
+            {
+                Console.Write(string.Format("File '{0}' already exists. Overwrite?\nEnter 'y' if you want to overwrite - for example if you're saving an updated version.\nEnter 'n' if you want to cancel.\nAnswer: ", args[0]));
+                string answer = Console.ReadLine().ToLower();
+                while (answer != "y" && answer != "n")
+                {
+                    Console.Write("Invalid answer. Please only type 'y' or 'n', without the apostrophes: ");
+                    answer = Console.ReadLine();
+                }
+                if (answer == "n")
+                {
+                    Console.WriteLine("Saving cancelled.");
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine(string.Format("Overwriting file {0}.", args[0]));
+                }
+            }
+
+            Serialise(path, central);
         }
 
         private void Load(string[] args)
         {
+            const string saveDir = "savefiles";
             if (args.Length != 1)
             {
-                Console.WriteLine("Takes exactly 1 argument.\nType 'help load' fpr more info.");
+                Console.WriteLine("Takes exactly 1 argument. The filename may not contain spaces.\nType 'help load' fpr more info.");
                 return;
             }
+            // check if filename is valid
+            if (args[0].IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            {
+                Console.WriteLine(string.Format("'{0}' contains invalid characters. Please try again with a valid file name.", args[0]));
+                return;
+            }
+
+            // add .dat if needed
             if (!args[0].EndsWith(".dat"))
             {
                 args[0] = args[0] + ".dat";
             }
+
+            string path = Path.Combine(saveDir, args[0]);
+
+            // check if the file exists
+            if (!File.Exists(path))
+            {
+                Console.WriteLine(string.Format("File {0} not found. Please try again with an existing filename.\nYou can use 'lsfiles' to see which files you have saved."));
+                return;
+            }
+
             // check if user really wants to load
-            // check if file exists and is valid
-            central = Deserialise(args[0]);
+            Console.Write("This will overwrite any currently open file. Continue?\nEnter 'y' or 'n': ");
+            string answer = Console.ReadLine().ToLower();
+            while (answer != "y" && answer != "n")
+            {
+                Console.Write("Invalid answer. Please only type 'y' or 'n', without the apostrophes: ");
+                answer = Console.ReadLine();
+            }
+            if (answer == "n")
+            {
+                Console.WriteLine("Loading cancelled.");
+                return;
+            }
+            else
+            {
+                Console.WriteLine(string.Format("Loading file {0}.", args[0]));
+            }
+            focus = null;
+            central = Deserialise(path);
+        }
+
+        private void LsFiles(string[] args)
+        {
+            const string saveDir = "savefiles";
+            string[] files = Directory.GetFiles(saveDir);
+            if (files.Length == 0)
+            {
+                Console.WriteLine("You have no files saved.");
+            }
+            else
+            {
+                foreach (string file in files)
+                {
+                    if (file.EndsWith(".dat")) Console.WriteLine(file);
+                }
+            }
+        }
+
+        private void NewFile(string[] args)
+        {
+            Console.Write("This will overwrite any currently open file. Continue?\nEnter 'y' or 'n': ");
+            string answer = Console.ReadLine().ToLower();
+            while (answer != "y" && answer != "n")
+            {
+                Console.Write("Invalid answer. Please only type 'y' or 'n', without the apostrophes: ");
+                answer = Console.ReadLine();
+            }
+            if (answer == "n")
+            {
+                Console.WriteLine("Cleaning cancelled.");
+                return;
+            }
+            focus = null;
+            central = new CentralStorage();
+            Console.WriteLine("Dictionary cleaned.");
         }
 
         #endregion
@@ -3175,17 +3349,12 @@ namespace rosalinds_dictionary
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
-            // ApplicationConfiguration.Initialize();
-            // Application.Run(new Form1());
+            CommandCentre cc = new CommandCentre(new CentralStorage());
 
-            CentralStorage central = new CentralStorage();
-            CommandCentre cc = new CommandCentre(central);
-
-            while (true)
+            bool run = true;
+            while (run)
             {
-                cc.WaitForCommand();
+                run = cc.WaitForCommand();
             }
         }
     }
