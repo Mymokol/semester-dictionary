@@ -1,0 +1,15 @@
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\bin\Debug\net6.0\rosalinds_dictionary.exe
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\bin\Debug\net6.0\rosalinds_dictionary.deps.json
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\bin\Debug\net6.0\rosalinds_dictionary.runtimeconfig.json
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\bin\Debug\net6.0\rosalinds_dictionary.dll
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\bin\Debug\net6.0\rosalinds_dictionary.pdb
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\obj\Debug\net6.0\rosalinds_dictionary.csproj.AssemblyReference.cache
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\obj\Debug\net6.0\rosalinds_dictionary.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\obj\Debug\net6.0\rosalinds_dictionary.AssemblyInfoInputs.cache
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\obj\Debug\net6.0\rosalinds_dictionary.AssemblyInfo.cs
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\obj\Debug\net6.0\rosalinds_dictionary.csproj.CoreCompileInputs.cache
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\obj\Debug\net6.0\rosalinds_dictionary.dll
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\obj\Debug\net6.0\refint\rosalinds_dictionary.dll
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\obj\Debug\net6.0\rosalinds_dictionary.pdb
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\obj\Debug\net6.0\rosalinds_dictionary.genruntimeconfig.cache
+C:\Users\capta\OneDrive\Documents\semester-dictionary\rosalinds_dictionary\rosalinds_dictionary\obj\Debug\net6.0\ref\rosalinds_dictionary.dll

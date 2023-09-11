@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "rosalinds_dictionary/1.0.0": {
+        "runtime": {
+          "rosalinds_dictionary.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "rosalinds_dictionary/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
