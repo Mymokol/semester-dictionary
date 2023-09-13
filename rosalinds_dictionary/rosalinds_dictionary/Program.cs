@@ -1792,7 +1792,7 @@ namespace rosalinds_dictionary
              * 2 args : (nameOf arguments to be substituted with object names)
              * · pos nameOfPoS : focus on a Part of Speech.
              * · wc nameOfWC : focus on a WordClass. Can only be run with a PoS in focus.
-             * · dc nameOfDec : focus on a Declension. Can only be run with a PoS in focus.
+             * · dc nameOfDec : focus on a Declension. Can only be run with a wc in focus.
              * · w nameOfWord : focus on a Word using the target language form.
              * · nt nameOfWord : focus on a Word using the native language form.
              * · wf nameOfDeclension : focus on a WordForm. Can only be run with a Word in focus.
