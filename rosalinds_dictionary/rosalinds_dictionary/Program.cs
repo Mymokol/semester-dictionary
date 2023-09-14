@@ -412,7 +412,7 @@ namespace rosalinds_dictionary
 
             foreach (TransformUnit unit in rules)
             {
-                if (Regex.IsMatch(transForm, unit.identifier))
+                if (Regex.IsMatch(baseForm, unit.identifier))
                 {
                     transForm = Regex.Replace(transForm, unit.regex, unit.replace);
                 }
@@ -1440,12 +1440,19 @@ namespace rosalinds_dictionary
             {
                 Directory.CreateDirectory(saveDir);
             }
-
-            using (FileStream fs = new FileStream(path, FileMode.Create))
+            try
             {
-                BinaryFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(fs, central);
+                using (FileStream fs = new FileStream(path, FileMode.Create))
+                {
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    formatter.Serialize(fs, central);
+                }
             }
+            catch(Exception ex)
+            {
+                Console.WriteLine("There was an error while saving. Please try again.\nException:\n" + ex.ToString());
+            }
+            
         }
 
         private CentralStorage Deserialise(string path)
@@ -1584,7 +1591,7 @@ namespace rosalinds_dictionary
 
                 string numStr = Console.ReadLine();
                 int numInt = -1;
-                while (!int.TryParse(numStr, out numInt) || !(numInt > 0 && numInt < ls.Count() - 1))
+                while (!int.TryParse(numStr, out numInt) || !(numInt >= 0 && numInt <= ls.Count - 1))
                 {
                     Console.WriteLine(string.Format("Entered value was not an integer between 0 and {0}. Please enter the integer again.", ls.Count() - 1));
                     numStr = Console.ReadLine();
