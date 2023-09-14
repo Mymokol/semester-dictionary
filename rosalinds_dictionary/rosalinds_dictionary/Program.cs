@@ -1457,9 +1457,14 @@ namespace rosalinds_dictionary
 
         private CentralStorage Deserialise(string path)
         {
-            FileStream fs = new FileStream(path, FileMode.Open);
-            BinaryFormatter formatter = new BinaryFormatter();
-            return (CentralStorage)formatter.Deserialize(fs);
+            CentralStorage st;
+            using (FileStream fs = new FileStream(path, FileMode.Open))
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                st = (CentralStorage)formatter.Deserialize(fs);
+            }
+
+            return st;
         }
 
         private string ConcatenateList(List<string> lst)
